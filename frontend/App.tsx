@@ -4,10 +4,10 @@ import Dashboard from './components/Dashboard';
 
 const App: React.FC = () => {
   return (
-    <div className="min-h-screen bg-cover bg-center text-neutral-200 font-sans p-0 rounded-3xl overflow-hidden" style={{backgroundImage: "url('https://images.unsplash.com/photo-1533090481720-856c6e3c1fdc?q=80&w=2787&auto=format&fit=crop')"}}>
-      <div className="bg-black/20 backdrop-blur-xl border border-white/5 p-4 lg:p-6 min-h-screen">
+    <div className="h-screen overflow-hidden font-sans" style={{backgroundColor: '#03110D'}}>
+      <div className="backdrop-blur-xl border rounded-xl md:rounded-2xl lg:rounded-3xl h-full flex flex-col" style={{backgroundColor: 'rgba(57, 5, 23, 0.75)', borderColor: 'rgba(199, 160, 122, 0.15)', margin: '8px', height: 'calc(100vh - 16px)'}}>
         <Header />
-        <main className="mt-6 h-[calc(100%-70px)]">
+        <main className="flex-1 overflow-y-auto px-2 sm:px-3 md:px-4 pb-2 sm:pb-3 md:pb-4">
           <Dashboard />
         </main>
       </div>
