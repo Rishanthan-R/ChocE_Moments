@@ -1,6 +1,7 @@
 import React from 'react';
 import Header from './components/Header';
 import Dashboard from './components/Dashboard';
+import ClickSpark from './components/ClickSpark';
 
 const App: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = React.useState("Truffles");
@@ -21,8 +22,10 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="h-screen overflow-hidden font-sans" style={{backgroundColor: '#03110D'}}>
-      <div className="backdrop-blur-xl border rounded-xl md:rounded-2xl lg:rounded-3xl h-full flex flex-col" style={{backgroundColor: 'rgba(57, 5, 23, 0.75)', borderColor: 'rgba(199, 160, 122, 0.15)', margin: '8px', height: 'calc(100vh - 16px)'}}>
+    <>
+      <ClickSpark color="#C7A07A" particleCount={10} sparkSize={6} minSpeed={60} maxSpeed={180} />
+      <div className="h-screen overflow-hidden font-sans" style={{backgroundColor: '#03110D'}}>
+        <div className="backdrop-blur-xl border rounded-xl md:rounded-2xl lg:rounded-3xl h-full flex flex-col" style={{backgroundColor: 'rgba(57, 5, 23, 0.75)', borderColor: 'rgba(199, 160, 122, 0.15)', margin: '8px', height: 'calc(100vh - 16px)'}}>
         <Header 
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
@@ -42,7 +45,8 @@ const App: React.FC = () => {
           />
         </main>
       </div>
-    </div>
+      </div>
+    </>
   );
 };
 
