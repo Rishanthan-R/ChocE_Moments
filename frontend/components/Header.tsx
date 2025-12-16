@@ -1,5 +1,6 @@
 import React from 'react';
 import { ModeraLogo, Search, AppGrid, Heart, ShoppingBag } from './icons';
+import { useAuth } from './AuthContext';
 
 interface HeaderProps {
   searchQuery: string;
@@ -8,6 +9,8 @@ interface HeaderProps {
   setSelectedCategory: (category: string) => void;
   favoritesCount: number;
   cartCount: number;
+  onCartClick: () => void;
+  onLoginClick: () => void;
 }
 
 const Header: React.FC<HeaderProps> = ({ 
@@ -16,11 +19,15 @@ const Header: React.FC<HeaderProps> = ({
   selectedCategory, 
   setSelectedCategory,
   favoritesCount,
-  cartCount 
+  cartCount,
+  onCartClick,
+  onLoginClick
 }) => {
   const [showDropdown, setShowDropdown] = React.useState(false);
   const [showFavoritesPanel, setShowFavoritesPanel] = React.useState(false);
   const [showCartPanel, setShowCartPanel] = React.useState(false);
+  const [showUserMenu, setShowUserMenu] = React.useState(false);
+  const { user, isAuthenticated, logout } = useAuth();
   const categories = ["Truffles", "Dark Chocolate", "Milk Chocolate", "Gift Boxes", "Bars", "Seasonal"];
   
   const handleCategorySelect = (category: string) => {
@@ -69,7 +76,7 @@ const Header: React.FC<HeaderProps> = ({
           )}
         </button>
         <button 
-          onClick={() => setShowCartPanel(!showCartPanel)}
+          onClick={onCartClick}
           className="hidden sm:block relative backdrop-blur-sm p-1.5 sm:p-2 md:p-2.5 rounded-full transition-all hover:scale-110"
           style={{backgroundColor: 'rgba(115, 65, 40, 0.5)', borderWidth: '1px', borderStyle: 'solid', borderColor: 'rgba(199, 160, 122, 0.25)'}}
           title="Shopping Cart"
@@ -81,10 +88,44 @@ const Header: React.FC<HeaderProps> = ({
             </span>
           )}
         </button>
-        <div className="hidden md:flex items-center gap-2 sm:gap-2.5 backdrop-blur-sm rounded-full pl-2 sm:pl-3 md:pl-4 pr-1 sm:pr-1.5 md:pr-2 py-1 sm:py-1.5 md:py-2" style={{backgroundColor: 'rgba(57, 30, 16, 0.7)', borderWidth: '1px', borderStyle: 'solid', borderColor: 'rgba(199, 160, 122, 0.3)'}}>
-          <span className="text-xs sm:text-sm font-medium" style={{color: '#FDFCE8'}}>Rishanthan</span>
-          <img src="https://i.pravatar.cc/150?u=olivia" alt="Rishanthan" className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 rounded-full" />
-        </div>
+        {isAuthenticated ? (
+          <div className="hidden md:flex relative items-center gap-2 sm:gap-2.5 backdrop-blur-sm rounded-full pl-2 sm:pl-3 md:pl-4 pr-1 sm:pr-1.5 md:pr-2 py-1 sm:py-1.5 md:py-2" style={{backgroundColor: 'rgba(57, 30, 16, 0.7)', borderWidth: '1px', borderStyle: 'solid', borderColor: 'rgba(199, 160, 122, 0.3)'}}>
+            <span className="text-xs sm:text-sm font-medium" style={{color: '#FDFCE8'}}>{user?.name || 'User'}</span>
+            <button onClick={() => setShowUserMenu(!showUserMenu)} className="relative">
+              <div className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 rounded-full flex items-center justify-center font-bold text-xs" style={{backgroundColor: '#C7A07A', color: '#16302B'}}>
+                {user?.name?.[0] || 'U'}
+              </div>
+            </button>
+            {showUserMenu && (
+              <div className="absolute top-full right-0 mt-2 w-48 rounded-lg shadow-2xl py-2 z-50" style={{backgroundColor: 'rgba(57, 30, 16, 0.98)', borderWidth: '2px', borderStyle: 'solid', borderColor: 'rgba(199, 160, 122, 0.4)'}}>
+                <div className="px-4 py-2 border-b" style={{borderColor: 'rgba(199, 160, 122, 0.2)'}}>
+                  <p className="text-sm font-semibold" style={{color: '#FDFCE8'}}>{user?.name}</p>
+                  <p className="text-xs" style={{color: '#E2CEB1'}}>{user?.email}</p>
+                </div>
+                <button
+                  onClick={() => {
+                    logout();
+                    setShowUserMenu(false);
+                  }}
+                  className="w-full text-left px-4 py-2 text-sm hover:bg-opacity-50 transition-all"
+                  style={{color: '#E2CEB1', backgroundColor: 'transparent'}}
+                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(199, 160, 122, 0.1)'}
+                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                >
+                  Logout
+                </button>
+              </div>
+            )}
+          </div>
+        ) : (
+          <button
+            onClick={onLoginClick}
+            className="hidden md:flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full font-semibold text-sm transition-all hover:scale-105 hover:shadow-lg"
+            style={{backgroundColor: '#C7A07A', color: '#16302B'}}
+          >
+            Login
+          </button>
+        )}
       </div>
     </header>
   );
