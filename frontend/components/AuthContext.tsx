@@ -20,6 +20,7 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
   signup: (userData: SignupData) => Promise<{ success: boolean; error?: string }>;
   logout: () => void;
+  getToken: () => string | null;
 }
 
 interface SignupData {
@@ -180,6 +181,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     localStorage.removeItem('choce_cart');
   };
 
+  const getToken = (): string | null => {
+    return localStorage.getItem('choce_token');
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -188,7 +193,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         isLoading,
         login,
         signup,
-        logout
+        logout,
+        getToken
       }}
     >
       {children}

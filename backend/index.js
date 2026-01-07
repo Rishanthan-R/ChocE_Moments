@@ -50,14 +50,25 @@ const connectionString = process.env.DATABASE_URL
 
 mongoose.connect(connectionString).then(
     () => {
-        console.log("Connected to database")
+        console.log("✅ Connected to database")
     }
 ).catch(
-    () => {
-        console.log("Failed to connect to the database")
+    (error) => {
+        console.error("❌ Failed to connect to the database:", error.message)
+        console.error("Please check your DATABASE_URL in .env file")
     }
 )
 
+
+// Health check endpoint
+app.get('/api/health', (req, res) => {
+    const dbStatus = mongoose.connection.readyState === 1 ? 'connected' : 'disconnected';
+    res.json({
+        status: 'ok',
+        database: dbStatus,
+        timestamp: new Date().toISOString()
+    });
+});
 
 app.use('/api/users', userRouter);
 app.use('/api/products', productRouter);
