@@ -1,6 +1,7 @@
 import express from "express";
 import mongoose from "mongoose";
 import bodyParser from "body-parser"; 
+import cors from "cors";
 import userRouter from "./routers/userRouter.js"; 
 import productRouter from "./routers/productRouter.js"; 
 import orderRouter from "./routers/orderRouter.js";
@@ -11,8 +12,15 @@ dotenv.config();
 
 const app = express()
 
+// Enable CORS for frontend
+app.use(cors({
+  origin: 'http://localhost:3000',
+  credentials: true
+}));
+
 app.use(bodyParser.json())
 
+// JWT Authentication Middleware
 app.use(
     (req, res, next) => {
         const value = req.get('authorization');
@@ -22,22 +30,16 @@ app.use(
                 token, 
                 process.env.JWT_SECRET,
                 (err, decoded) => {
-                    if(decoded == null) {
-                        res.status(403).json({
+                    if(err || decoded == null) {
+                        return res.status(403).json({
                             message : "Unauthorized"
-
                         })
-
                     }    
-                    else {    
-                        req.user = decoded;
-                        next();
-                    }
+                    req.user = decoded;
+                    next();
                 }
             )    
-         }    
-                
-         else {
+         } else {
             next();
          }           
 
@@ -68,9 +70,11 @@ app.use('/api/orders', orderRouter);
 
 
 
-app.listen(5000,
+const PORT = process.env.PORT || 5000;
+
+app.listen(PORT,
     () => {
-        console.log("Server started");
+        console.log(`Server started on port ${PORT}`);
     }  
 )    
 
