@@ -6,6 +6,7 @@ import ClickSpark from './components/ClickSpark';
 import Cart from './components/Cart';
 import Toast from './components/Toast';
 import AuthModal from './components/AuthModal';
+import PaymentPage from './components/PaymentPage';
 
 interface CartItem {
   id: string;
@@ -37,6 +38,8 @@ const App: React.FC = () => {
   const [toasts, setToasts] = React.useState<ToastMessage[]>([]);
   const [isAuthModalOpen, setIsAuthModalOpen] = React.useState(false);
   const [pendingCartItem, setPendingCartItem] = React.useState<CartItem | null>(null);
+  const [isPaymentPageOpen, setIsPaymentPageOpen] = React.useState(false);
+  const [checkoutFormData, setCheckoutFormData] = React.useState<{ name: string; address: string; phone: string } | null>(null);
 
   // Load cart from localStorage on mount
   React.useEffect(() => {
@@ -133,6 +136,23 @@ const App: React.FC = () => {
         setIsAuthModalOpen={setIsAuthModalOpen}
         setPendingCartItem={setPendingCartItem}
         handleAuthSuccess={handleAuthSuccess}
+        onProceedToPayment={(formData) => {
+          setCheckoutFormData(formData);
+          setIsPaymentPageOpen(true);
+        }}
+        isPaymentPageOpen={isPaymentPageOpen}
+        checkoutFormData={checkoutFormData}
+        onPaymentClose={() => {
+          setIsPaymentPageOpen(false);
+          setCheckoutFormData(null);
+        }}
+        onOrderSuccess={() => {
+          setCartItems([]);
+          localStorage.removeItem('choce_cart');
+          setIsPaymentPageOpen(false);
+          setCheckoutFormData(null);
+          showToast('Order placed successfully!', 'success');
+        }}
       />
     </AuthProvider>
   );
@@ -159,6 +179,11 @@ interface AppContentProps {
   setIsAuthModalOpen: (open: boolean) => void;
   setPendingCartItem: (item: CartItem | null) => void;
   handleAuthSuccess: () => void;
+  onProceedToPayment: (formData: { name: string; address: string; phone: string }) => void;
+  isPaymentPageOpen: boolean;
+  checkoutFormData: { name: string; address: string; phone: string } | null;
+  onPaymentClose: () => void;
+  onOrderSuccess: () => void;
 }
 
 const AppContent: React.FC<AppContentProps> = ({
@@ -181,7 +206,12 @@ const AppContent: React.FC<AppContentProps> = ({
   isAuthModalOpen,
   setIsAuthModalOpen,
   setPendingCartItem,
-  handleAuthSuccess
+  handleAuthSuccess,
+  onProceedToPayment,
+  isPaymentPageOpen,
+  checkoutFormData,
+  onPaymentClose,
+  onOrderSuccess
 }) => {
   return (
     <>
@@ -226,9 +256,22 @@ const AppContent: React.FC<AppContentProps> = ({
         onClearCart={() => {
           setCartItems([]);
           localStorage.removeItem('choce_cart');
-          showToast('Order sent! Your cart has been cleared.', 'success');
+          showToast('Cart cleared!', 'success');
         }}
+        onProceedToPayment={onProceedToPayment}
       />
+      {isPaymentPageOpen && checkoutFormData && (
+        <PaymentPage
+          cartItems={cartItems}
+          formData={checkoutFormData}
+          onBack={() => {
+            setIsPaymentPageOpen(false);
+            setIsCartOpen(true);
+          }}
+          onOrderSuccess={onOrderSuccess}
+          onClose={onPaymentClose}
+        />
+      )}
       <AuthModal
         isOpen={isAuthModalOpen}
         onClose={() => {

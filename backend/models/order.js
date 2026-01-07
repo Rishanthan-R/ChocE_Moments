@@ -53,9 +53,34 @@ const orderSchema = new mongoose.Schema({
                 type : Number,
                 required : true
             },
-           
+            pieces : {
+                type : Number,
+                default : 0
+            },
+            basePrice : {
+                type : Number,
+                default : 0
+            },
+            totalPrice : {
+                type : Number,
+                required : true
+            },
+            addOns : {
+                giftCard : {
+                    type : Boolean,
+                    default : false
+                },
+                customName : {
+                    type : String,
+                    default : null
+                }
+            }
         }
     ],
+    paymentMethod : {
+        type : String,
+        default : "cash"
+    },
      total : {
         type : Number,
         required : true,
