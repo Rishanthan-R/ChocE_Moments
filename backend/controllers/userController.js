@@ -14,6 +14,7 @@ export function createUser(req, res) {
         lastName: req.body.lastName,
         email: req.body.email,
         password: passwordHash
+
         
     }
 
@@ -45,9 +46,12 @@ export function loginUser(req, res) {
         }
     ).then(
         (user) => {
+            const genericErrorMessage = "Invalid email or password"; // Generic message for security
+
             if(user == null) {
-                res.status(404).json({
-                    message: "User not found"
+                // User not found - return generic error
+                res.status(401).json({
+                    message: genericErrorMessage
                 })
             } else {
                 const isPasswordCorrect = bcrypt.compareSync(password, user.password)
@@ -73,8 +77,9 @@ export function loginUser(req, res) {
                         message: "Login successful"
                     })
                 } else {
-                    res.status(403).json({
-                        message: "Incorrect password"
+                     // Incorrect password - return generic error (same as user not found)
+                    res.status(401).json({
+                        message: genericErrorMessage
                     })
                 }
            }

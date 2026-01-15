@@ -80,6 +80,8 @@ export async function deleteProduct(req, res) {
     }
 
 }
+import AuditLog from '../models/auditLog.js'; // Import AuditLog
+
 export  async function updateProduct(req, res) {
 
     if(!isAdmin(req)) {
@@ -93,8 +95,21 @@ export  async function updateProduct(req, res) {
     const productId = req.params.productId;
     data.productId = productId;       
 
+    // --- AUC-05 Mitigation: Validation ---
+    if (data.price !== undefined && data.price <= 0) {
+        return res.status(400).json({
+            message: "Invalid Price. Price must be greater than 0."
+        });
+    }
+    // -------------------------------------
 
     try {
+        // --- AUC-05 Mitigation: Audit Logging (Read-before-Write) ---
+        const oldProduct = await Product.findOne({ productId: productId });
+        
+        if (!oldProduct) {
+             return res.status(404).json({ message: "Product not found" });
+        }
 
         await Product.updateOne(
              { 
@@ -102,6 +117,27 @@ export  async function updateProduct(req, res) {
             },
             data 
         );   
+        
+        // Log changes
+        const changes = {};
+        if (data.price !== undefined && data.price != oldProduct.price) {
+            changes.price = { from: oldProduct.price, to: data.price };
+        }
+        if (data.stock !== undefined && data.stock != oldProduct.stock) {
+            changes.stock = { from: oldProduct.stock, to: data.stock };
+        }
+
+        if (Object.keys(changes).length > 0) {
+            const auditEntry = new AuditLog({
+                action: "UPDATE_PRODUCT",
+                performedBy: req.user.email,
+                targetId: productId,
+                details: changes
+            });
+            await auditEntry.save();
+            console.log("Audit Log recorded:", changes);
+        }
+        // ------------------------------------------------------------
         
         res.json({
             message : "Product updated successfully"
