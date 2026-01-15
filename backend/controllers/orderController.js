@@ -67,6 +67,35 @@ export async function createOrder(req, res) {
                 console.warn(`Product lookup failed for ${item.productId}`, e);
             }
 
+            // --- Server-Side Option Validation (MMUC-02 Mitigation) ---
+            if (product && product.options && product.options.length > 0) {
+                // Ensure the user sent options for this item
+                // We expect item.selectedOptions to be an object like { "Size": "Small" }
+                // Note: You might need to adjust based on how your frontend sends data. 
+                // If frontend sends array, logic changes slightly. Assuming object map for now.
+                
+                const selectedOptions = item.selectedOptions || {}; 
+
+                for (const option of product.options) {
+                    const userValue = selectedOptions[option.name];
+
+                    // 1. Check if required option is missing
+                    if (!userValue) {
+                         return res.status(400).json({
+                            message: `Missing required option '${option.name}' for product '${product.name}'`
+                        });
+                    }
+
+                    // 2. Check if selected value is valid
+                    if (!option.values.includes(userValue)) {
+                        return res.status(400).json({
+                            message: `Invalid value '${userValue}' for option '${option.name}'. Allowed: ${option.values.join(", ")}`
+                        });
+                    }
+                }
+            }
+            // -----------------------------------------------------------
+
             // Determine price safely
             // Use Number() to ensure we don't do string concatenation
             const basePrice = Number(item.basePrice) || (product ? product.price : 0) || 0;
