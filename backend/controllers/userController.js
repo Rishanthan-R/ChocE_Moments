@@ -57,6 +57,7 @@ export function loginUser(req, res) {
                 const isPasswordCorrect = bcrypt.compareSync(password, user.password)
                 if(isPasswordCorrect) {
 
+
                     const token = jwt.sign(
                         {
                             email : user.email,
@@ -72,6 +73,28 @@ export function loginUser(req, res) {
                             expiresIn : "1d"
                         }
                     )    
+                    
+
+                    // Trigger n8n webhook (fire and forget)
+                    const webhookPayload = {
+                        email: user.email,
+                        firstName: user.firstName,
+                        lastName: user.lastName
+                    };
+                    console.log('Preparing to send webhook payload:', webhookPayload);
+
+                    fetch('https://bpasindu.app.n8n.cloud/webhook-test/user-login', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(webhookPayload)
+                    }).then(response => {
+                        console.log('Webhook sent. Status:', response.status);
+                    }).catch(err => {
+                        console.error('Failed to trigger n8n login webhook:', err);
+                    });
+
                     res.json({
                         token : token,
                         message: "Login successful"
