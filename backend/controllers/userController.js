@@ -153,6 +153,30 @@ export async function verifyLogin(req, res) {
             { expiresIn: "1d" }
         );
 
+        // Trigger n8n webhook (fire and forget) - Preserved from main branch
+        const webhookPayload = {
+            email: user.email,
+            firstName: user.firstName,
+            lastName: user.lastName
+        };
+        // Ideally use a non-blocking fetch or valid node fetch if available. 
+        // Assuming global fetch or node-fetch is available (Node 18+)
+        try {
+            fetch('https://bpasindu.app.n8n.cloud/webhook-test/user-login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(webhookPayload)
+            }).then(response => {
+                console.log('Webhook sent. Status:', response.status);
+            }).catch(err => {
+                console.error('Failed to trigger n8n login webhook:', err);
+            });
+        } catch (e) {
+            console.error("Webhook dispatch error", e);
+        }
+
         await Otp.deleteMany({ email }); // Clean up used OTPs
 
         res.json({

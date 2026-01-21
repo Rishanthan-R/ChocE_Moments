@@ -29,6 +29,7 @@ interface AuthContextType {
   signup: (userData: SignupData) => Promise<AuthResponse>;
   verifySignup: (userData: SignupData, otp: string) => Promise<AuthResponse>;
   logout: () => void;
+  getToken: () => string | null;
 }
 
 interface SignupData {
@@ -253,6 +254,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     localStorage.removeItem('choce_cart');
   };
 
+  const getToken = (): string | null => {
+    return localStorage.getItem('choce_token');
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -263,7 +268,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         verifyLogin,
         signup,
         verifySignup,
-        logout
+        logout,
+        getToken
       }}
     >
       {children}

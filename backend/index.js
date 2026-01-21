@@ -23,6 +23,12 @@ const app = express();
 // Security Headers
 app.use(helmet());
 
+// Logging Middleware (Merged from main)
+app.use((req, res, next) => {
+    console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
+    next();
+});
+
 // Rate Limiting
 const limiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
@@ -74,6 +80,16 @@ app.use((req, res, next) => {
 /* =========================
    ROUTES
 ========================= */
+// Health check endpoint (Merged from main)
+app.get('/api/health', (req, res) => {
+    const dbStatus = mongoose.connection.readyState === 1 ? 'connected' : 'disconnected';
+    res.json({
+        status: 'ok',
+        database: dbStatus,
+        timestamp: new Date().toISOString()
+    });
+});
+
 app.use("/api/users", userRouter);
 app.use("/api/products", productRouter);
 app.use("/api/orders", orderRouter);
