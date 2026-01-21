@@ -63,6 +63,34 @@ const AdminDashboard: React.FC = () => {
         setExpandedOrderId(expandedOrderId === orderId ? null : orderId);
     };
 
+    const handleStatusChange = async (orderId: string, newStatus: string) => {
+        try {
+            const token = getToken();
+            const response = await fetch(`${API_BASE_URL}/orders/${orderId}/status`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ status: newStatus })
+            });
+
+            if (!response.ok) {
+                const data = await response.json();
+                throw new Error(data.message || 'Failed to update status');
+            }
+
+            // Update local state
+            setOrders(prevOrders =>
+                prevOrders.map(order =>
+                    order.orderId === orderId ? { ...order, status: newStatus } : order
+                )
+            );
+        } catch (err) {
+            alert(err instanceof Error ? err.message : 'Failed to update status');
+        }
+    };
+
     if (isLoading) {
         return <div className="text-white text-center p-8">Loading orders...</div>;
     }
@@ -104,12 +132,23 @@ const AdminDashboard: React.FC = () => {
                                             {new Date(order.date).toLocaleDateString()}
                                         </td>
                                         <td className="p-4">
-                                            <span className={`px-2 py-1 rounded text-xs font-medium ${order.status === 'Pending' ? 'bg-yellow-500/20 text-yellow-300' :
-                                                    order.status === 'Completed' ? 'bg-green-500/20 text-green-300' :
-                                                        'bg-gray-500/20 text-gray-300'
-                                                }`}>
-                                                {order.status}
-                                            </span>
+                                            <select
+                                                value={order.status}
+                                                onClick={(e) => e.stopPropagation()}
+                                                onChange={(e) => handleStatusChange(order.orderId, e.target.value)}
+                                                className={`px-2 py-1 rounded text-xs font-medium border-none outline-none cursor-pointer ${order.status === 'Pending' ? 'bg-yellow-500/20 text-yellow-300' :
+                                                    order.status === 'Processing' ? 'bg-blue-500/20 text-blue-300' :
+                                                        order.status === 'Shipped' ? 'bg-purple-500/20 text-purple-300' :
+                                                            order.status === 'Delivered' ? 'bg-green-500/20 text-green-300' :
+                                                                'bg-red-500/20 text-red-300'
+                                                    }`}
+                                            >
+                                                <option value="Pending" className="bg-gray-800 text-yellow-300">Pending</option>
+                                                <option value="Processing" className="bg-gray-800 text-blue-300">Processing</option>
+                                                <option value="Shipped" className="bg-gray-800 text-purple-300">Shipped</option>
+                                                <option value="Delivered" className="bg-gray-800 text-green-300">Delivered</option>
+                                                <option value="Cancelled" className="bg-gray-800 text-red-300">Cancelled</option>
+                                            </select>
                                         </td>
                                         <td className="p-4 text-right font-medium text-[#C7A07A]">
                                             LKR {order.total.toLocaleString()}

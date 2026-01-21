@@ -1,5 +1,5 @@
 import React from 'react';
-import { AuthProvider } from './components/AuthContext';
+import { AuthProvider, useAuth } from './components/AuthContext';
 import Header from './components/Header';
 import Dashboard from './components/Dashboard';
 import ClickSpark from './components/ClickSpark';
@@ -223,6 +223,14 @@ const AppContent: React.FC<AppContentProps> = ({
   onClearCart
 }) => {
   const [currentView, setCurrentView] = React.useState<'home' | 'admin'>('home');
+  const { user } = useAuth(); // Get user from context
+
+  // Redirect to Admin Dashboard if user is admin
+  React.useEffect(() => {
+    if (user && user.role === 'admin') {
+      setCurrentView('admin');
+    }
+  }, [user]);
 
   return (
     <>

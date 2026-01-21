@@ -9,11 +9,16 @@ const products = [
         productId: 'choce-nutmelt',
         name: 'ChocE NutMelt',
         description: 'ChocE NutMelt blends roasted nuts with rich chocolate to create a smooth, crunchy, irresistible bite.',
-        price: 400,
+        price: 400, // Base price (fallback)
         category: 'Truffles',
-        image: 'https://placehold.co/600x400', // Placeholder or matching frontend path if possible (usually standard URL)
+        image: 'https://placehold.co/600x400', 
         stock: 100,
-        isActive: true
+        isActive: true,
+        quantityOptions: [
+            { pieces: 2, price: 400 },
+            { pieces: 4, price: 750 },
+            { pieces: 6, price: 1000 }
+        ]
     },
     {
         productId: 'choce-date-bliss',
@@ -23,7 +28,12 @@ const products = [
         category: 'Truffles',
         image: 'https://placehold.co/600x400',
         stock: 100,
-        isActive: true
+        isActive: true,
+         quantityOptions: [
+            { pieces: 4, price: 400 },
+            { pieces: 6, price: 550 },
+            { pieces: 8, price: 700 }
+        ]
     },
     {
         productId: 'choce-amour',
@@ -33,7 +43,12 @@ const products = [
         category: 'Truffles',
         image: 'https://placehold.co/600x400',
         stock: 100,
-        isActive: true
+        isActive: true,
+        quantityOptions: [
+            { pieces: 2, price: 400 },
+            { pieces: 4, price: 750 },
+            { pieces: 6, price: 1000 }
+        ]
     }
 ];
 
