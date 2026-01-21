@@ -184,7 +184,7 @@ const FeaturedProductCard: React.FC<ProductCardProps> = ({
   };
 
   return (
-    <div className={`rounded-lg md:rounded-xl overflow-hidden backdrop-blur-sm transition-all ${styles.productCard} ${styles.expandable} ${isExpanded ? styles.productCardExpanded : ''}`}>
+    <div className={`rounded-lg md:rounded-xl overflow-hidden transition-all ${styles.productCard} ${styles.expandable} ${isExpanded ? styles.productCardExpanded : ''}`}>
       <div className={`relative h-48 sm:h-56 md:h-64 ${styles.productImage}`}>
         <img src={image} alt={name} className="w-full h-full object-cover" loading="lazy" />
         {includeCustomName && customName && isExpanded && (

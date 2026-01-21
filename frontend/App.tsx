@@ -68,7 +68,7 @@ const App: React.FC = () => {
   };
 
   const toggleFavorite = (item: string) => {
-    setFavorites(prev => 
+    setFavorites(prev =>
       prev.includes(item) ? prev.filter(i => i !== item) : [...prev, item]
     );
   };
@@ -153,10 +153,17 @@ const App: React.FC = () => {
           setCheckoutFormData(null);
           showToast('Order placed successfully!', 'success');
         }}
+        onClearCart={() => {
+          setCartItems([]);
+          localStorage.removeItem('choce_cart');
+          showToast('Cart cleared!', 'success');
+        }}
       />
     </AuthProvider>
   );
 };
+
+import AdminDashboard from './components/AdminDashboard'; // Import AdminDashboard
 
 interface AppContentProps {
   searchQuery: string;
@@ -184,6 +191,7 @@ interface AppContentProps {
   checkoutFormData: { name: string; address: string; phone: string } | null;
   onPaymentClose: () => void;
   onOrderSuccess: () => void;
+  onClearCart: () => void;
 }
 
 const AppContent: React.FC<AppContentProps> = ({
@@ -211,41 +219,50 @@ const AppContent: React.FC<AppContentProps> = ({
   isPaymentPageOpen,
   checkoutFormData,
   onPaymentClose,
-  onOrderSuccess
+  onOrderSuccess,
+  onClearCart
 }) => {
+  const [currentView, setCurrentView] = React.useState<'home' | 'admin'>('home');
+
   return (
     <>
       <ClickSpark color="#C7A07A" particleCount={10} sparkSize={6} minSpeed={60} maxSpeed={180} />
-      <div className="h-screen overflow-hidden font-sans" style={{backgroundColor: '#03110D'}}>
-        <div className="backdrop-blur-xl border rounded-xl md:rounded-2xl lg:rounded-3xl h-full flex flex-col" style={{backgroundColor: 'rgba(57, 5, 23, 0.75)', borderColor: 'rgba(199, 160, 122, 0.15)', margin: '8px', height: 'calc(100vh - 16px)'}}>
-        <Header 
-          searchQuery={searchQuery}
-          setSearchQuery={setSearchQuery}
-          selectedCategory={selectedCategory}
-          setSelectedCategory={setSelectedCategory}
-          favoritesCount={favorites.length}
-          cartCount={cartItems.length}
-          onCartClick={() => setIsCartOpen(true)}
-          onLoginClick={() => setIsAuthModalOpen(true)}
-        />
-        <main className="flex-1 overflow-y-auto px-2 sm:px-3 md:px-4 pb-2 sm:pb-3 md:pb-4">
-          <Dashboard 
+      <div className="h-screen overflow-hidden font-sans" style={{ backgroundColor: '#03110D' }}>
+        <div className="border rounded-xl md:rounded-2xl lg:rounded-3xl h-full flex flex-col" style={{ backgroundColor: 'rgba(57, 5, 23, 0.75)', borderColor: 'rgba(199, 160, 122, 0.15)', margin: '8px', height: 'calc(100vh - 16px)' }}>
+          <Header
             searchQuery={searchQuery}
+            setSearchQuery={setSearchQuery}
             selectedCategory={selectedCategory}
-            favorites={favorites}
-            toggleFavorite={toggleFavorite}
-            cartItems={cartItems}
-            onAddToCart={(item) => {
-              addToCart(item);
-            }}
-            onShowAuthModal={(item) => {
-              setPendingCartItem(item);
-              setIsAuthModalOpen(true);
-            }}
-            isInCart={isInCart}
+            setSelectedCategory={setSelectedCategory}
+            favoritesCount={favorites.length}
+            cartCount={cartItems.length}
+            onCartClick={() => setIsCartOpen(true)}
+            onLoginClick={() => setIsAuthModalOpen(true)}
+            onAdminClick={() => setCurrentView('admin')}
+            onHomeClick={() => setCurrentView('home')}
           />
-        </main>
-      </div>
+          <main className="flex-1 overflow-y-auto px-2 sm:px-3 md:px-4 pb-2 sm:pb-3 md:pb-4">
+            {currentView === 'home' ? (
+              <Dashboard
+                searchQuery={searchQuery}
+                selectedCategory={selectedCategory}
+                favorites={favorites}
+                toggleFavorite={toggleFavorite}
+                cartItems={cartItems}
+                onAddToCart={(item) => {
+                  addToCart(item);
+                }}
+                onShowAuthModal={(item) => {
+                  setPendingCartItem(item);
+                  setIsAuthModalOpen(true);
+                }}
+                isInCart={isInCart}
+              />
+            ) : (
+              <AdminDashboard />
+            )}
+          </main>
+        </div>
       </div>
       <Cart
         isOpen={isCartOpen}
@@ -253,11 +270,7 @@ const AppContent: React.FC<AppContentProps> = ({
         cartItems={cartItems}
         onUpdateQuantity={updateCartQuantity}
         onRemoveItem={removeFromCart}
-        onClearCart={() => {
-          setCartItems([]);
-          localStorage.removeItem('choce_cart');
-          showToast('Cart cleared!', 'success');
-        }}
+        onClearCart={onClearCart}
         onProceedToPayment={onProceedToPayment}
       />
       {isPaymentPageOpen && checkoutFormData && (
@@ -265,7 +278,7 @@ const AppContent: React.FC<AppContentProps> = ({
           cartItems={cartItems}
           formData={checkoutFormData}
           onBack={() => {
-            setIsPaymentPageOpen(false);
+            onPaymentClose();
             setIsCartOpen(true);
           }}
           onOrderSuccess={onOrderSuccess}

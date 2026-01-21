@@ -59,25 +59,25 @@ const Cart: React.FC<CartProps> = ({ isOpen, onClose, cartItems, onUpdateQuantit
 
   const validateForm = (): boolean => {
     const errors: Partial<CheckoutFormData> = {};
-    
+
     if (!formData.name.trim()) {
       errors.name = 'Name is required';
     } else if (formData.name.trim().length < 2) {
       errors.name = 'Name must be at least 2 characters';
     }
-    
+
     if (!formData.phone.trim()) {
       errors.phone = 'Phone number is required';
     } else if (!/^[0-9]{10}$/.test(formData.phone.replace(/\s/g, ''))) {
       errors.phone = 'Please enter a valid 10-digit phone number';
     }
-    
+
     if (!formData.address.trim()) {
       errors.address = 'Delivery address is required';
     } else if (formData.address.trim().length < 10) {
       errors.address = 'Please enter a complete address';
     }
-    
+
     setFormErrors(errors);
     return Object.keys(errors).length === 0;
   };
@@ -89,28 +89,28 @@ const Cart: React.FC<CartProps> = ({ isOpen, onClose, cartItems, onUpdateQuantit
 
   const handleSubmitOrder = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (isSubmitting) {
       return;
     }
-    
+
     if (!validateForm()) {
       return;
     }
-    
+
     // Check if user is authenticated and has a valid token
     if (!isAuthenticated) {
       alert('Please login to proceed to payment');
       return;
     }
-    
+
     // Verify token exists in localStorage
     const token = localStorage.getItem('choce_token');
     if (!token) {
       alert('Your session has expired. Please login again.');
       return;
     }
-    
+
     // Proceed to payment page
     onProceedToPayment(formData);
     setShowCheckoutForm(false);
@@ -132,18 +132,16 @@ const Cart: React.FC<CartProps> = ({ isOpen, onClose, cartItems, onUpdateQuantit
   return (
     <>
       {/* Backdrop */}
-      <div 
-        className={`fixed inset-0 bg-black bg-opacity-50 z-40 backdrop-blur-sm transition-opacity duration-500 ease-in-out ${
-          isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
-        }`}
+      <div
+        className={`fixed inset-0 bg-black bg-opacity-50 z-[9999] backdrop-blur-sm transition-opacity duration-500 ease-in-out ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
+          }`}
         onClick={onClose}
       />
 
       {/* Cart Sidebar */}
-      <div 
-        className={`fixed right-0 top-0 h-full w-full sm:w-96 z-50 shadow-2xl transform transition-all duration-500 ease-in-out ${
-          isOpen ? 'translate-x-0' : 'translate-x-full'
-        }`}
+      <div
+        className={`fixed right-0 top-0 h-full w-full sm:w-96 z-[9999] shadow-2xl transform transition-all duration-500 ease-in-out ${isOpen ? 'translate-x-0' : 'translate-x-full'
+          }`}
         style={{
           backgroundColor: 'rgba(57, 30, 16, 0.98)',
           borderLeft: '2px solid rgba(199, 160, 122, 0.4)'
@@ -151,7 +149,7 @@ const Cart: React.FC<CartProps> = ({ isOpen, onClose, cartItems, onUpdateQuantit
       >
         <div className="flex flex-col h-full">
           {/* Header */}
-          <div 
+          <div
             className="flex items-center justify-between p-3 sm:p-4 border-b"
             style={{ borderColor: 'rgba(199, 160, 122, 0.3)' }}
           >
@@ -182,7 +180,7 @@ const Cart: React.FC<CartProps> = ({ isOpen, onClose, cartItems, onUpdateQuantit
             ) : (
               <div className="space-y-4">
                 {cartItems.map(item => (
-                  <div 
+                  <div
                     key={item.id}
                     className="rounded-lg p-3 backdrop-blur-sm"
                     style={{
@@ -193,8 +191,8 @@ const Cart: React.FC<CartProps> = ({ isOpen, onClose, cartItems, onUpdateQuantit
                     }}
                   >
                     <div className="flex gap-3">
-                      <img 
-                        src={item.image} 
+                      <img
+                        src={item.image}
                         alt={item.name}
                         className="w-20 h-20 object-cover rounded-lg"
                         style={{ backgroundColor: 'rgba(22, 48, 43, 0.5)' }}
@@ -256,9 +254,9 @@ const Cart: React.FC<CartProps> = ({ isOpen, onClose, cartItems, onUpdateQuantit
 
           {/* Footer with Total and Checkout */}
           {cartItems.length > 0 && (
-            <div 
+            <div
               className="p-3 sm:p-4 border-t"
-              style={{ 
+              style={{
                 borderColor: 'rgba(199, 160, 122, 0.3)',
                 backgroundColor: 'rgba(22, 48, 43, 0.6)'
               }}
@@ -279,8 +277,8 @@ const Cart: React.FC<CartProps> = ({ isOpen, onClose, cartItems, onUpdateQuantit
               <button
                 onClick={onClose}
                 className="w-full py-2 mt-2 rounded-full text-sm sm:text-base font-semibold transition-all hover:scale-105"
-                style={{ 
-                  backgroundColor: 'rgba(199, 160, 122, 0.2)', 
+                style={{
+                  backgroundColor: 'rgba(199, 160, 122, 0.2)',
                   color: '#FDFCE8',
                   borderWidth: '1px',
                   borderStyle: 'solid',
@@ -297,12 +295,12 @@ const Cart: React.FC<CartProps> = ({ isOpen, onClose, cartItems, onUpdateQuantit
       {/* Checkout Form Modal */}
       {showCheckoutForm && (
         <>
-          <div 
-            className="fixed inset-0 bg-black bg-opacity-70 z-50 backdrop-blur-sm"
+          <div
+            className="fixed inset-0 bg-black bg-opacity-70 z-[9999] backdrop-blur-sm"
             onClick={() => setShowCheckoutForm(false)}
           />
-          <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
-            <div 
+          <div className="fixed inset-0 flex items-center justify-center z-[9999] p-4">
+            <div
               className="w-full max-w-md rounded-2xl p-6 shadow-2xl"
               style={{
                 backgroundColor: 'rgba(57, 30, 16, 0.98)',
@@ -432,8 +430,8 @@ const Cart: React.FC<CartProps> = ({ isOpen, onClose, cartItems, onUpdateQuantit
                     type="submit"
                     disabled={isSubmitting}
                     className="w-full py-3 rounded-full font-semibold transition-all hover:scale-105 shadow-lg flex items-center justify-center gap-2"
-                    style={{ 
-                      backgroundColor: isSubmitting ? 'rgba(199, 160, 122, 0.5)' : '#C7A07A', 
+                    style={{
+                      backgroundColor: isSubmitting ? 'rgba(199, 160, 122, 0.5)' : '#C7A07A',
                       color: '#16302B',
                       cursor: isSubmitting ? 'not-allowed' : 'pointer',
                       opacity: isSubmitting ? 0.6 : 1

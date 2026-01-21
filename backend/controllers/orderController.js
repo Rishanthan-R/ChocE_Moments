@@ -163,3 +163,13 @@ export async function createOrder(req, res) {
         });
     }
 }
+
+export async function getAllOrders(req, res) {
+    try {
+        const orders = await Order.find().sort({ date: -1 });
+        res.json(orders);
+    } catch (error) {
+        console.error("Error fetching orders:", error);
+        res.status(500).json({ message: "Failed to fetch orders" });
+    }
+}
