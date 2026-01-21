@@ -606,10 +606,6 @@ const Footer: React.FC = () => (
     <div className="p-8 md:p-12">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-8">
         <div>
-// Import at the top
-          import OWLogo from '../Media/OW-Logo.png';
-
-          // ... inside Footer component:
           <div className="flex items-center gap-2 mb-4">
             <img src={OWLogo} alt="ChocE Moments" className="w-10 h-10 object-contain" />
             <span className="font-bold text-xl" style={{ color: '#FDFCE8', fontFamily: 'Georgia, serif' }}>ChocE Moments</span>
