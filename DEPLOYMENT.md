@@ -113,9 +113,9 @@ We will configure Nginx to serve the frontend files and reverse proxy API reques
    ```nginx
    server {
        listen 80;
-       server_name your_domain_or_ip; # e.g., 54.123.45.67 or example.com
+       server_name choco.pasindubuddhima.me;
 
-       root /home/ubuntu/choce-moments/dist; # Path to your dist folder
+       root /home/ubuntu/choco1/ChocE_Moments/dist;
        index index.html;
 
        # Frontend: Serve React App
@@ -125,7 +125,7 @@ We will configure Nginx to serve the frontend files and reverse proxy API reques
 
        # Backend: Proxy API requests to Node.js
        location /api {
-           proxy_pass http://localhost:5001; # Matches PORT in backend/.env
+           proxy_pass http://localhost:5001; # Ensure this matches PORT in backend/.env
            proxy_http_version 1.1;
            proxy_set_header Upgrade $http_upgrade;
            proxy_set_header Connection 'upgrade';
@@ -133,6 +133,7 @@ We will configure Nginx to serve the frontend files and reverse proxy API reques
            proxy_cache_bypass $http_upgrade;
        }
    }
+
    ```
    *Note: If you cloned to a different path, update the `root` directive accordingly (e.g., if you are user 'ubuntu', the home path is /home/ubuntu).*
 
