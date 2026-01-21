@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { X, ArrowLeft, CreditCard, CheckCircle } from './icons';
 import { useAuth } from './AuthContext';
 
-const API_BASE_URL = 'http://localhost:5000/api';
+import { API_BASE_URL } from '../config';
+
 
 interface CartItem {
   id: string;
@@ -70,7 +71,7 @@ const PaymentPage: React.FC<PaymentPageProps> = ({
     try {
       // Get JWT token using AuthContext method
       const token = getToken();
-      
+
       if (!token) {
         setError('Your session has expired. Please login again to place an order.');
         setIsProcessing(false);
@@ -113,7 +114,7 @@ const PaymentPage: React.FC<PaymentPageProps> = ({
       // Order created successfully
       setOrderId(data.result?.orderId || 'N/A');
       setOrderSuccess(true);
-      
+
       // Clear cart after successful order
       setTimeout(() => {
         onOrderSuccess();
@@ -129,7 +130,7 @@ const PaymentPage: React.FC<PaymentPageProps> = ({
   if (orderSuccess) {
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ backgroundColor: 'rgba(3, 17, 13, 0.95)' }}>
-        <div 
+        <div
           className="w-full max-w-md rounded-2xl p-8 shadow-2xl text-center"
           style={{
             backgroundColor: 'rgba(57, 30, 16, 0.98)',
@@ -164,9 +165,9 @@ const PaymentPage: React.FC<PaymentPageProps> = ({
     <div className="fixed inset-0 z-50 overflow-y-auto" style={{ backgroundColor: 'rgba(3, 17, 13, 0.95)' }}>
       <div className="min-h-screen flex flex-col">
         {/* Header */}
-        <div 
+        <div
           className="sticky top-0 z-10 flex items-center justify-between p-4 border-b"
-          style={{ 
+          style={{
             backgroundColor: 'rgba(57, 30, 16, 0.98)',
             borderColor: 'rgba(199, 160, 122, 0.3)'
           }}
@@ -193,7 +194,7 @@ const PaymentPage: React.FC<PaymentPageProps> = ({
         {/* Content */}
         <div className="flex-1 p-4 max-w-2xl mx-auto w-full">
           {/* Order Summary */}
-          <div 
+          <div
             className="rounded-xl p-6 mb-6"
             style={{
               backgroundColor: 'rgba(57, 30, 16, 0.6)',
@@ -232,7 +233,7 @@ const PaymentPage: React.FC<PaymentPageProps> = ({
           </div>
 
           {/* Delivery Information */}
-          <div 
+          <div
             className="rounded-xl p-6 mb-6"
             style={{
               backgroundColor: 'rgba(57, 30, 16, 0.6)',
@@ -279,7 +280,7 @@ const PaymentPage: React.FC<PaymentPageProps> = ({
 
           {/* Error Message */}
           {error && (
-            <div 
+            <div
               className="rounded-lg p-4 mb-6"
               style={{ backgroundColor: 'rgba(244, 67, 54, 0.2)', borderLeft: '3px solid #f44336' }}
             >
@@ -301,10 +302,10 @@ const PaymentPage: React.FC<PaymentPageProps> = ({
             onClick={handlePayment}
             disabled={isProcessing}
             className="w-full py-4 rounded-full font-semibold transition-all hover:scale-105 shadow-lg flex items-center justify-center gap-2"
-            style={{ 
-              backgroundColor: isProcessing 
-                ? 'rgba(199, 160, 122, 0.5)' 
-                : '#C7A07A', 
+            style={{
+              backgroundColor: isProcessing
+                ? 'rgba(199, 160, 122, 0.5)'
+                : '#C7A07A',
               color: '#16302B',
               cursor: isProcessing ? 'not-allowed' : 'pointer',
               opacity: isProcessing ? 0.6 : 1

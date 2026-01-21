@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
-const API_BASE_URL = 'http://localhost:5000/api';
+import { API_BASE_URL } from '../config';
+
 
 interface User {
   id?: string;
@@ -64,7 +65,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     const savedToken = localStorage.getItem('choce_token');
     const savedUser = localStorage.getItem('choce_user_data');
-    
+
     if (savedToken && savedUser) {
       try {
         const decoded = decodeToken(savedToken);
@@ -113,7 +114,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (data.token) {
         // Store token
         localStorage.setItem('choce_token', data.token);
-        
+
         // Decode token to get user info
         const decoded = decodeToken(data.token);
         if (decoded) {
