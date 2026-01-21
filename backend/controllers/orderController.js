@@ -2,7 +2,7 @@ import Order from '../models/order.js';
 import Product from '../models/product.js';
 import mongoose from 'mongoose';
 
-// ... (imports remain)
+
 
 export async function createOrder(req, res) {
     try {
@@ -16,7 +16,7 @@ export async function createOrder(req, res) {
         }
 
         console.log('Creating order...');
-        
+
         if (req.user == null) {
             return res.status(401).json({
                 message: "Please login to create an order"
@@ -30,10 +30,10 @@ export async function createOrder(req, res) {
             return res.status(400).json({ message: "Invalid items format or empty cart" });
         }
 
-        // --- Improved Order ID Generation ---
+        
         let orderId = "CM00001"; // Default start
         try {
-            // Sort by _id (creation time) instead of date to be safer
+            
             const latestOrder = await Order.findOne().sort({ _id: -1 });
             if (latestOrder && latestOrder.orderId) {
                 const lastIdStr = latestOrder.orderId.replace("CM", "");
@@ -47,7 +47,7 @@ export async function createOrder(req, res) {
             // Fallback to random ID to avoid collision if generation fails
             orderId = "CM" + Math.floor(Math.random() * 100000).toString().padStart(5, "0");
         }
-        // ------------------------------------
+        
 
         for (let i = 0; i < req.body.items.length; i++) {
             let item = req.body.items[i];
@@ -67,21 +67,18 @@ export async function createOrder(req, res) {
                 console.warn(`Product lookup failed for ${item.productId}`, e);
             }
 
-            // --- Server-Side Option Validation (MMUC-02 Mitigation) ---
+            
             if (product && product.options && product.options.length > 0) {
-                // Ensure the user sent options for this item
-                // We expect item.selectedOptions to be an object like { "Size": "Small" }
-                // Note: You might need to adjust based on how your frontend sends data. 
-                // If frontend sends array, logic changes slightly. Assuming object map for now.
                 
-                const selectedOptions = item.selectedOptions || {}; 
+
+                const selectedOptions = item.selectedOptions || {};
 
                 for (const option of product.options) {
                     const userValue = selectedOptions[option.name];
 
                     // 1. Check if required option is missing
                     if (!userValue) {
-                         return res.status(400).json({
+                        return res.status(400).json({
                             message: `Missing required option '${option.name}' for product '${product.name}'`
                         });
                     }
@@ -94,30 +91,33 @@ export async function createOrder(req, res) {
                     }
                 }
             }
-            // -----------------------------------------------------------
+            
 
-            // Determine price safely
-            // Use Number() to ensure we don't do string concatenation
-            const basePrice = Number(item.basePrice) || (product ? product.price : 0) || 0;
-            const itemTotalPrice = Number(item.totalPrice) || basePrice; // Fallback
-
-            if (itemTotalPrice <= 0) {
-                 return res.status(400).json({ message: `Invalid price for item: ${item.name}`});
+            
+            if (!product) {
+                
+                return res.status(400).json({ message: `Product not found: ${item.productId}` });
             }
 
+            
+            const pricePerUnit = product.price;
+
+            
+
             items.push({
-                productId: product ? product.productId : item.productId,
-                name: product ? product.name : item.name,
-                image: (product && product.image) ? product.image : (item.image || "default-product.jpg"),
-                price: basePrice,
+                productId: product.productId,
+                name: product.name,
+                image: product.image,
+                price: pricePerUnit,
                 quantity: Number(item.quantity),
                 pieces: Number(item.pieces) || 0,
-                basePrice: basePrice,
-                totalPrice: itemTotalPrice,
+                basePrice: pricePerUnit,       // Store the verified unit price
+                totalPrice: pricePerUnit,      // Consistent with original `itemTotalPrice` usage (unit price)
                 addOns: item.addOns || { giftCard: false, customName: null }
             });
 
-            total += itemTotalPrice * Number(item.quantity);
+            // Calculate total using the trusted unit price and quantity
+            total += pricePerUnit * Number(item.quantity);
         }
 
         // Validate user info from token/body
@@ -148,10 +148,10 @@ export async function createOrder(req, res) {
 
     } catch (error) {
         console.error('Order creation error:', error);
-        
-         // Handle Duplicate Key Error (E11000) for orderId specifically
+
+        // Handle Duplicate Key Error (E11000) for orderId specifically
         if (error.code === 11000 && error.keyPattern && error.keyPattern.orderId) {
-             return res.status(409).json({
+            return res.status(409).json({
                 message: "Order creation failed due to ID collision. Please try again.",
                 error: "Duplicate Order ID"
             });
