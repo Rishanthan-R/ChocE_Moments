@@ -1,82 +1,99 @@
+import dotenv from "dotenv";
+dotenv.config(); // ✅ MUST BE FIRST
+
 import express from "express";
 import mongoose from "mongoose";
-import bodyParser from "body-parser"; 
 import cors from "cors";
-import userRouter from "./routers/userRouter.js"; 
-import productRouter from "./routers/productRouter.js"; 
-import orderRouter from "./routers/orderRouter.js";
 import jwt from "jsonwebtoken";
-import dotenv from "dotenv";
+import helmet from "helmet";
+import rateLimit from "express-rate-limit";
+import mongoSanitize from "express-mongo-sanitize";
+import xss from "xss-clean";
 
-dotenv.config();
+import userRouter from "./routers/userRouter.js";
+import productRouter from "./routers/productRouter.js";
+import orderRouter from "./routers/orderRouter.js";
 
-const app = express()
+const app = express();
 
-// Enable CORS for frontend
+/* =========================
+   MIDDLEWARES
+========================= */
+
+// Security Headers
+app.use(helmet());
+
+// Rate Limiting
+const limiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100, // Limit each IP to 100 requests per windowMs
+    message: "Too many requests from this IP, please try again later."
+});
+app.use(limiter);
+
+// JSON parser (body-parser not needed in modern Express)
+app.use(express.json({ limit: '10kb' })); // Body limit
+
+// Data Sanitization against NoSQL Query Injection
+// app.use(mongoSanitize());
+
+// Data Sanitization against XSS
+// app.use(xss());
+
+// Enable CORS
 app.use(cors({
-  origin: 'http://localhost:3000',
-  credentials: true
+    origin: "http://localhost:3000",
+    credentials: true
 }));
 
-app.use(bodyParser.json())
+/* =========================
+   JWT AUTH MIDDLEWARE
+========================= */
+app.use((req, res, next) => {
+    const authHeader = req.headers.authorization;
 
-// JWT Authentication Middleware
-app.use(
-    (req, res, next) => {
-        const value = req.get('authorization');
-        if(value != null) {
-            const token = value.replace("Bearer ","")
-            jwt.verify(
-                token, 
-                process.env.JWT_SECRET,
-                (err, decoded) => {
-                    if(err || decoded == null) {
-                        return res.status(403).json({
-                            message : "Unauthorized"
-                        })
-                    }    
-                    req.user = decoded;
-                    next();
-                }
-            )    
-         } else {
-            next();
-         }           
-
+    if (!authHeader) {
+        return next(); // allow public routes (signup/login)
     }
 
-)
-const connectionString = process.env.DATABASE_URL
-
-mongoose.connect(connectionString).then(
-    () => {
-        console.log("Connected to database")
+    if (!authHeader.startsWith("Bearer ")) {
+        return res.status(401).json({ message: "Invalid token format" });
     }
-).catch(
-    () => {
-        console.log("Failed to connect to the database")
+
+    const token = authHeader.split(" ")[1];
+
+    try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        req.user = decoded;
+        next();
+    } catch (err) {
+        return res.status(403).json({ message: "Unauthorized" });
     }
-)
+});
 
+/* =========================
+   ROUTES
+========================= */
+app.use("/api/users", userRouter);
+app.use("/api/products", productRouter);
+app.use("/api/orders", orderRouter);
 
-app.use('/api/users', userRouter);
-app.use('/api/products', productRouter);
-app.use('/api/orders', orderRouter);
+/* =========================
+   DATABASE CONNECTION
+========================= */
+mongoose
+    .connect(process.env.DATABASE_URL)
+    .then(() => console.log("Connected to database"))
+    .catch((err) => {
+        console.error("Database connection failed:", err.message);
+        process.exit(1);
+    });
 
-
-
-
-
-
-
-
+/* =========================
+   SERVER START
+========================= */
 const PORT = process.env.PORT || 5000;
 
-app.listen(PORT,
-    () => {
-        console.log(`Server started on port ${PORT}`);
-    }  
-)    
-
-
-
+app.listen(PORT, () => {
+    console.log(`Server started on port ${PORT}`);
+});

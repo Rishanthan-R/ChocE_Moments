@@ -10,9 +10,11 @@ interface AuthModalProps {
 
 const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess }) => {
   const [activeTab, setActiveTab] = useState<'login' | 'signup'>('login');
+  const [authStep, setAuthStep] = useState<'credentials' | 'otp'>('credentials');
+  const [otp, setOtp] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
-  const { login, signup } = useAuth();
+  const { login, verifyLogin, signup, verifySignup } = useAuth();
 
   // Login form state
   const [loginData, setLoginData] = useState({
@@ -105,11 +107,16 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess }) => 
     setIsSubmitting(false);
 
     if (result.success) {
-      // Reset form
-      setLoginData({ email: '', password: '' });
-      setFormErrors({});
-      if (onSuccess) onSuccess();
-      onClose();
+      if (result.requiresOtp) {
+        setAuthStep('otp');
+        setError('');
+      } else {
+        // Direct success (fallback)
+        setLoginData({ email: '', password: '' });
+        setFormErrors({});
+        if (onSuccess) onSuccess();
+        onClose();
+      }
     } else {
       setError(result.error || 'Login failed');
     }
@@ -134,18 +141,23 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess }) => 
     setIsSubmitting(false);
 
     if (result.success) {
-      // Reset form
-      setSignupData({
-        name: '',
-        email: '',
-        phone: '',
-        address: '',
-        password: '',
-        confirmPassword: ''
-      });
-      setFormErrors({});
-      if (onSuccess) onSuccess();
-      onClose();
+      if (result.requiresOtp) {
+        setAuthStep('otp');
+        setError('');
+      } else {
+        // Direct success (fallback)
+        setSignupData({
+          name: '',
+          email: '',
+          phone: '',
+          address: '',
+          password: '',
+          confirmPassword: ''
+        });
+        setFormErrors({});
+        if (onSuccess) onSuccess();
+        onClose();
+      }
     } else {
       setError(result.error || 'Signup failed');
     }
@@ -153,8 +165,44 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess }) => 
 
   const switchTab = (tab: 'login' | 'signup') => {
     setActiveTab(tab);
+    setAuthStep('credentials');
     setError('');
     setFormErrors({});
+  };
+
+  const handleVerify = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!otp || otp.length < 6) {
+      setError('Please enter a valid OTP');
+      return;
+    }
+
+    setIsSubmitting(true);
+    let result;
+
+    if (activeTab === 'login') {
+      result = await verifyLogin(loginData.email, otp);
+    } else {
+      result = await verifySignup(signupData, otp);
+    }
+
+    setIsSubmitting(false);
+
+    if (result.success) {
+      if (onSuccess) onSuccess();
+      onClose();
+      // Reset state after close
+      setTimeout(() => {
+        setAuthStep('credentials');
+        setOtp('');
+        setLoginData({ email: '', password: '' });
+        setSignupData({
+          name: '', email: '', phone: '', address: '', password: '', confirmPassword: ''
+        });
+      }, 300);
+    } else {
+      setError(result.error || 'Verification failed');
+    }
   };
 
   if (!isOpen) return null;
@@ -181,7 +229,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess }) => 
           {/* Header */}
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-2xl sm:text-3xl font-bold" style={{ color: '#FDFCE8', fontFamily: 'Georgia, serif' }}>
-              {activeTab === 'login' ? 'Welcome Back' : 'Create Account'}
+              {authStep === 'otp' ? 'Verification' : (activeTab === 'login' ? 'Welcome Back' : 'Create Account')}
             </h2>
             <button
               onClick={onClose}
@@ -193,32 +241,32 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess }) => 
           </div>
 
           {/* Tabs */}
-          <div className="flex gap-2 mb-6">
-            <button
-              onClick={() => switchTab('login')}
-              className={`flex-1 py-2.5 rounded-lg font-semibold transition-all ${
-                activeTab === 'login' ? 'shadow-lg' : ''
-              }`}
-              style={{
-                backgroundColor: activeTab === 'login' ? '#C7A07A' : 'rgba(199, 160, 122, 0.2)',
-                color: activeTab === 'login' ? '#16302B' : '#C7A07A'
-              }}
-            >
-              Login
-            </button>
-            <button
-              onClick={() => switchTab('signup')}
-              className={`flex-1 py-2.5 rounded-lg font-semibold transition-all ${
-                activeTab === 'signup' ? 'shadow-lg' : ''
-              }`}
-              style={{
-                backgroundColor: activeTab === 'signup' ? '#C7A07A' : 'rgba(199, 160, 122, 0.2)',
-                color: activeTab === 'signup' ? '#16302B' : '#C7A07A'
-              }}
-            >
-              Sign Up
-            </button>
-          </div>
+          {authStep === 'credentials' && (
+            <div className="flex gap-2 mb-6">
+              <button
+                onClick={() => switchTab('login')}
+                className={`flex-1 py-2.5 rounded-lg font-semibold transition-all ${activeTab === 'login' ? 'shadow-lg' : ''
+                  }`}
+                style={{
+                  backgroundColor: activeTab === 'login' ? '#C7A07A' : 'rgba(199, 160, 122, 0.2)',
+                  color: activeTab === 'login' ? '#16302B' : '#C7A07A'
+                }}
+              >
+                Login
+              </button>
+              <button
+                onClick={() => switchTab('signup')}
+                className={`flex-1 py-2.5 rounded-lg font-semibold transition-all ${activeTab === 'signup' ? 'shadow-lg' : ''
+                  }`}
+                style={{
+                  backgroundColor: activeTab === 'signup' ? '#C7A07A' : 'rgba(199, 160, 122, 0.2)',
+                  color: activeTab === 'signup' ? '#16302B' : '#C7A07A'
+                }}
+              >
+                Sign Up
+              </button>
+            </div>
+          )}
 
           {/* Error Message */}
           {error && (
@@ -233,7 +281,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess }) => 
           )}
 
           {/* Login Form */}
-          {activeTab === 'login' && (
+          {activeTab === 'login' && authStep === 'credentials' && (
             <form onSubmit={handleLogin} className="space-y-4">
               <div>
                 <label htmlFor="login-email" className="block text-sm font-semibold mb-2" style={{ color: '#FDFCE8' }}>
@@ -316,7 +364,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess }) => 
           )}
 
           {/* Signup Form */}
-          {activeTab === 'signup' && (
+          {activeTab === 'signup' && authStep === 'credentials' && (
             <form onSubmit={handleSignup} className="space-y-4">
               <div>
                 <label htmlFor="signup-name" className="block text-sm font-semibold mb-2" style={{ color: '#FDFCE8' }}>
@@ -514,19 +562,90 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess }) => 
             </form>
           )}
 
+          {/* OTP Verification Form */}
+          {authStep === 'otp' && (
+            <form onSubmit={handleVerify} className="space-y-4">
+              <div className="text-center mb-6">
+                <p style={{ color: '#E2CEB1' }}>
+                  We've sent a verification code to <br />
+                  <span className="font-semibold" style={{ color: '#C7A07A' }}>
+                    {activeTab === 'login' ? loginData.email : signupData.email}
+                  </span>
+                </p>
+              </div>
+
+              <div>
+                <label htmlFor="otp-input" className="block text-sm font-semibold mb-2" style={{ color: '#FDFCE8' }}>
+                  Enter OTP Code *
+                </label>
+                <input
+                  type="text"
+                  id="otp-input"
+                  value={otp}
+                  onChange={(e) => {
+                    const val = e.target.value.replace(/\D/g, '').slice(0, 6);
+                    setOtp(val);
+                    setError('');
+                  }}
+                  placeholder="000000"
+                  className="w-full px-4 py-3 rounded-lg outline-none text-center tracking-widest text-xl"
+                  style={{
+                    backgroundColor: 'rgba(22, 48, 43, 0.5)',
+                    borderWidth: '2px',
+                    borderStyle: 'solid',
+                    borderColor: error ? '#f44336' : 'rgba(199, 160, 122, 0.3)',
+                    color: '#FDFCE8'
+                  }}
+                  autoFocus
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={isSubmitting || otp.length < 6}
+                className="w-full py-3 rounded-full font-semibold transition-all hover:scale-105 shadow-lg flex items-center justify-center gap-2 mt-6"
+                style={{
+                  backgroundColor: isSubmitting ? 'rgba(199, 160, 122, 0.5)' : '#C7A07A',
+                  color: '#16302B',
+                  cursor: (isSubmitting || otp.length < 6) ? 'not-allowed' : 'pointer'
+                }}
+              >
+                {isSubmitting ? (
+                  <>
+                    <div className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
+                    <span>Verifying...</span>
+                  </>
+                ) : (
+                  'Verify & Continue'
+                )}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setAuthStep('credentials')}
+                className="w-full text-center text-sm hover:underline mt-4 block"
+                style={{ color: '#C7A07A' }}
+              >
+                Back to {activeTab === 'login' ? 'Login' : 'Signup'}
+              </button>
+            </form>
+          )}
+
           {/* Footer Note */}
-          <p className="text-xs text-center mt-6" style={{ color: '#E2CEB1' }}>
-            {activeTab === 'login' ? "Don't have an account? " : 'Already have an account? '}
-            <button
-              onClick={() => switchTab(activeTab === 'login' ? 'signup' : 'login')}
-              className="font-semibold hover:underline"
-              style={{ color: '#C7A07A' }}
-            >
-              {activeTab === 'login' ? 'Sign up here' : 'Login here'}
-            </button>
-          </p>
+          {authStep === 'credentials' && (
+            <p className="text-xs text-center mt-6" style={{ color: '#E2CEB1' }}>
+              {activeTab === 'login' ? "Don't have an account? " : 'Already have an account? '}
+              <button
+                onClick={() => switchTab(activeTab === 'login' ? 'signup' : 'login')}
+                className="font-semibold hover:underline"
+                style={{ color: '#C7A07A' }}
+              >
+                {activeTab === 'login' ? 'Sign up here' : 'Login here'}
+              </button>
+            </p>
+          )}
         </div>
-      </div>
+      </div >
     </>
   );
 };

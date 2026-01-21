@@ -1,45 +1,45 @@
 import mongoose from "mongoose"
 
 const userSchema = new mongoose.Schema({
-    firstName : {
-        type : String,
+    firstName: {
+        type: String,
         required: true
-    },    
-    lastName:{
-        type : String,
+    },
+    lastName: {
+        type: String,
         required: true
-    },  
-       
+    },
+
     email: {
-        type : String,
+        type: String,
         required: true,
         unique: true
-    },  
+    },
     password: {
-        type : String,
-        required : true 
-    },    
-    phone : {
-        type : String,
-        default : "NOT GIVEN"
-    }, 
+        type: String,
+        required: true
+    },
+    phone: {
+        type: String,
+        default: "NOT GIVEN"
+    },
     isBlocked: {
-        type : Boolean,
-        default : false
+        type: Boolean,
+        default: false
     },
-    role : {
-        type : String,  
-        default : "USER" 
+    role: {
+        type: String,
+        default: "USER"
     },
-    isEmailVerified : {
-        type : Boolean,
-        default : false
+    isEmailVerified: {
+        type: Boolean,
+        default: false
     },
-    image : {
-        type : String,
-        default : "default.jpg"
+    image: {
+        type: String,
+        default: "default.jpg"
     }
-    
+
 
 })
 
