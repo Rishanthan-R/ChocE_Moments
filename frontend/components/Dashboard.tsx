@@ -9,6 +9,7 @@ import Image11 from '../Media/11.png';
 import Image12 from '../Media/12.png';
 import Image13 from '../Media/13.png';
 import Image14 from '../Media/14.png';
+import OWLogo from '../Media/OW-Logo.png';
 
 
 interface CartItem {
@@ -440,7 +441,6 @@ const FeaturedProducts: React.FC<{ favorites: string[], toggleFavorite: (id: str
       name: 'Coming Soon',
       description: 'Coming Soon',
       rating: 5.0,
-      rating: 5.0,
       image: Image14,
       quantityOptions: [
         { pieces: 6, price: 500 }
@@ -606,8 +606,12 @@ const Footer: React.FC = () => (
     <div className="p-8 md:p-12">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-8">
         <div>
+// Import at the top
+          import OWLogo from '../Media/OW-Logo.png';
+
+          // ... inside Footer component:
           <div className="flex items-center gap-2 mb-4">
-            <img src="../Media/OW-Logo.png" alt="ChocE Moments" className="w-10 h-10 object-contain" />
+            <img src={OWLogo} alt="ChocE Moments" className="w-10 h-10 object-contain" />
             <span className="font-bold text-xl" style={{ color: '#FDFCE8', fontFamily: 'Georgia, serif' }}>ChocE Moments</span>
           </div>
           <p className="text-sm mb-4" style={{ color: '#E2CEB1' }}>Premium handmade chocolate gifting brand creating memorable moments with personalized, artistically packaged chocolates made from organic and local ingredients.</p>
@@ -676,7 +680,7 @@ const Footer: React.FC = () => (
       </div>
       <div className="pt-6" style={{ borderTop: '1px solid rgba(199, 160, 122, 0.2)' }}>
         <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-          <p className="text-sm" style={{ color: '#E2CEB1' }}>Â© 2025 ChocE Moments. All rights reserved.</p>
+          <p className="text-sm" style={{ color: '#E2CEB1' }}>© 2026 ChocE Moments. All rights reserved.</p>
           <div className="flex gap-4">
             <a href="#" className="text-sm hover:opacity-80 transition-opacity" style={{ color: '#E2CEB1' }}>Privacy Policy</a>
             <a href="#" className="text-sm hover:opacity-80 transition-opacity" style={{ color: '#E2CEB1' }}>Terms of Service</a>

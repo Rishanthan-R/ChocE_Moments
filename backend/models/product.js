@@ -36,6 +36,10 @@ const productSchema = new mongoose.Schema({
         type : Boolean,
         default : true
     },
+    quantityOptions: [{
+        pieces: Number,
+        price: Number
+    }],
     options: [{
         name: String,   // e.g., "Size", "Color"
         values: [String] // e.g., ["Small", "Medium"], ["Red", "Blue"]
