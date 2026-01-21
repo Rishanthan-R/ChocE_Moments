@@ -1,5 +1,6 @@
 import Order from '../models/order.js';
 import Product from '../models/product.js';
+import Reservation from '../models/reservation.js';
 import mongoose from 'mongoose';
 
 
@@ -30,10 +31,10 @@ export async function createOrder(req, res) {
             return res.status(400).json({ message: "Invalid items format or empty cart" });
         }
 
-        
+
         let orderId = "CM00001"; // Default start
         try {
-            
+
             const latestOrder = await Order.findOne().sort({ _id: -1 });
             if (latestOrder && latestOrder.orderId) {
                 const lastIdStr = latestOrder.orderId.replace("CM", "");
@@ -47,7 +48,7 @@ export async function createOrder(req, res) {
             // Fallback to random ID to avoid collision if generation fails
             orderId = "CM" + Math.floor(Math.random() * 100000).toString().padStart(5, "0");
         }
-        
+
 
         for (let i = 0; i < req.body.items.length; i++) {
             let item = req.body.items[i];
@@ -67,9 +68,9 @@ export async function createOrder(req, res) {
                 console.warn(`Product lookup failed for ${item.productId}`, e);
             }
 
-            
+
             if (product && product.options && product.options.length > 0) {
-                
+
 
                 const selectedOptions = item.selectedOptions || {};
 
@@ -91,18 +92,45 @@ export async function createOrder(req, res) {
                     }
                 }
             }
-            
 
-            
-            if (!product) {
-                
-                return res.status(400).json({ message: `Product not found: ${item.productId}` });
+
+
+            // Check stock and reservations
+            const requestedQty = Number(item.quantity);
+
+            // 1. Check if user holds a valid reservation for this product
+            const userReservation = await Reservation.findOne({
+                userId: req.user.email,
+                productId: product.productId
+            });
+
+            const reservedByUser = userReservation ? userReservation.quantity : 0;
+
+            // 2. Check total global reservations to calculate real availability
+            const allReservations = await Reservation.aggregate([
+                { $match: { productId: product.productId, expiresAt: { $gt: new Date() } } },
+                { $group: { _id: null, total: { $sum: "$quantity" } } }
+            ]);
+            const totalReserved = allReservations.length > 0 ? allReservations[0].total : 0;
+
+            // "Available to Promise" = Stock - (TotalReserved - ReservedByMe)
+            // If I have reserved 2, and stock is 10, total reserved could be 2. Available = 10 - (2-2) = 10. Correct.
+            // If someone else reserved 8. Total reserved 10. Available = 10 - (10-2) = 2. 
+            // If I request 3? 2 < 3. Fail.
+
+            const availableStock = product.stock - (totalReserved - reservedByUser);
+
+            if (availableStock < requestedQty) {
+                return res.status(409).json({
+                    message: `Insufficient stock for product '${product.name}'. Available: ${availableStock}.`,
+                    available: availableStock
+                });
             }
 
-            
+
             const pricePerUnit = product.price;
 
-            
+
 
             items.push({
                 productId: product.productId,
@@ -141,6 +169,30 @@ export async function createOrder(req, res) {
         const result = await order.save();
 
         console.log('Order saved:', result.orderId);
+
+        // --- AUC-03 Fix: Deduct Stock & Cleanup Reservations ---
+        // This marks the transition from "Reserved" to "Sold"
+        for (const item of items) {
+            try {
+                // Deduct from Stock
+                await Product.updateOne(
+                    { productId: item.productId },
+                    { $inc: { stock: -item.quantity } }
+                );
+
+                // Remove User's Reservation (it is now consumed by the order)
+                await Reservation.deleteOne({
+                    userId: req.user.email,
+                    productId: item.productId
+                });
+
+            } catch (cleanupError) {
+                console.error(`Failed to cleanup reservation/stock for ${item.productId}`, cleanupError);
+                // In production, this might need a retry mechanism or alert
+            }
+        }
+        // --------------------------------------------------------
+
         res.json({
             message: "Order created successfully",
             result: result

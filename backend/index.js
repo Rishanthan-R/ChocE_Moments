@@ -1,12 +1,13 @@
 import express from "express";
 import mongoose from "mongoose";
-import bodyParser from "body-parser"; 
+import bodyParser from "body-parser";
 import cors from "cors";
-import userRouter from "./routers/userRouter.js"; 
-import productRouter from "./routers/productRouter.js"; 
+import userRouter from "./routers/userRouter.js";
+import productRouter from "./routers/productRouter.js";
 import orderRouter from "./routers/orderRouter.js";
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
+import cartRouter from "./routers/cartRouter.js";
 
 dotenv.config();
 
@@ -27,24 +28,24 @@ app.use(bodyParser.json())
 app.use(
     (req, res, next) => {
         const value = req.get('authorization');
-        if(value != null) {
-            const token = value.replace("Bearer ","")
+        if (value != null) {
+            const token = value.replace("Bearer ", "")
             jwt.verify(
-                token, 
+                token,
                 process.env.JWT_SECRET,
                 (err, decoded) => {
-                    if(err || decoded == null) {
+                    if (err || decoded == null) {
                         return res.status(403).json({
-                            message : "Unauthorized"
+                            message: "Unauthorized"
                         })
-                    }    
+                    }
                     req.user = decoded;
                     next();
                 }
-            )    
-         } else {
+            )
+        } else {
             next();
-         }           
+        }
 
     }
 
@@ -76,6 +77,7 @@ app.get('/api/health', (req, res) => {
 app.use('/api/users', userRouter);
 app.use('/api/products', productRouter);
 app.use('/api/orders', orderRouter);
+app.use('/api/cart', cartRouter);
 
 
 
@@ -89,8 +91,8 @@ const PORT = process.env.PORT || 5000;
 app.listen(PORT,
     () => {
         console.log(`Server started on port ${PORT}`);
-    }  
-)    
+    }
+)
 
 
 
