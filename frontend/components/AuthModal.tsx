@@ -163,12 +163,12 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess }) => 
     <>
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black z-50 backdrop-blur-sm transition-opacity duration-500 ease-in-out opacity-50"
+        className="fixed inset-0 bg-black z-[9999] backdrop-blur-sm transition-opacity duration-500 ease-in-out opacity-50"
         onClick={onClose}
       />
 
       {/* Modal */}
-      <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
+      <div className="fixed inset-0 flex items-center justify-center z-[9999] p-4">
         <div
           className="w-full max-w-md rounded-2xl p-6 sm:p-8 shadow-2xl transform transition-all duration-500 ease-in-out"
           style={{
@@ -196,9 +196,8 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess }) => 
           <div className="flex gap-2 mb-6">
             <button
               onClick={() => switchTab('login')}
-              className={`flex-1 py-2.5 rounded-lg font-semibold transition-all ${
-                activeTab === 'login' ? 'shadow-lg' : ''
-              }`}
+              className={`flex-1 py-2.5 rounded-lg font-semibold transition-all ${activeTab === 'login' ? 'shadow-lg' : ''
+                }`}
               style={{
                 backgroundColor: activeTab === 'login' ? '#C7A07A' : 'rgba(199, 160, 122, 0.2)',
                 color: activeTab === 'login' ? '#16302B' : '#C7A07A'
@@ -208,9 +207,8 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess }) => 
             </button>
             <button
               onClick={() => switchTab('signup')}
-              className={`flex-1 py-2.5 rounded-lg font-semibold transition-all ${
-                activeTab === 'signup' ? 'shadow-lg' : ''
-              }`}
+              className={`flex-1 py-2.5 rounded-lg font-semibold transition-all ${activeTab === 'signup' ? 'shadow-lg' : ''
+                }`}
               style={{
                 backgroundColor: activeTab === 'signup' ? '#C7A07A' : 'rgba(199, 160, 122, 0.2)',
                 color: activeTab === 'signup' ? '#16302B' : '#C7A07A'
