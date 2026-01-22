@@ -1,10 +1,12 @@
 import express from 'express';
-import {  createUser,loginUser } from '../controllers/userController.js';
-
+import { initiateSignup, verifySignup, initiateLogin, verifyLogin } from '../controllers/userController.js';
 
 const userRouter = express.Router();
-userRouter.post('/', createUser);
-userRouter.post('/login', loginUser);
+
+userRouter.post('/signup', initiateSignup);
+userRouter.post('/verify-signup', verifySignup);
+userRouter.post('/login', initiateLogin);
+userRouter.post('/verify-login', verifyLogin);
 
 
 

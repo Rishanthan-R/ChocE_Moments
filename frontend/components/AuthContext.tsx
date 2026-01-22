@@ -1,7 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-
 import { API_BASE_URL } from '../config';
-
 
 interface User {
   id?: string;
@@ -14,12 +12,20 @@ interface User {
   role?: string;
 }
 
+interface AuthResponse {
+  success: boolean;
+  error?: string;
+  requiresOtp?: boolean;
+}
+
 interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
-  signup: (userData: SignupData) => Promise<{ success: boolean; error?: string }>;
+  login: (email: string, password: string) => Promise<AuthResponse>;
+  verifyLogin: (email: string, otp: string) => Promise<AuthResponse>;
+  signup: (userData: SignupData) => Promise<AuthResponse>;
+  verifySignup: (userData: SignupData, otp: string) => Promise<AuthResponse>;
   logout: () => void;
   getToken: () => string | null;
 }
@@ -95,7 +101,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, [user]);
 
-  const login = async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
+  const login = async (email: string, password: string): Promise<AuthResponse> => {
     try {
       const response = await fetch(`${API_BASE_URL}/users/login`, {
         method: 'POST',
@@ -111,11 +117,32 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return { success: false, error: data.message || 'Login failed' };
       }
 
-      if (data.token) {
-        // Store token
-        localStorage.setItem('choce_token', data.token);
+      // Backend now returns { message: "OTP sent..." } for step 1
+      return { success: true, requiresOtp: true };
+    } catch (error) {
+      console.error('Login error:', error);
+      return { success: false, error: 'Network error. Please check if the backend server is running.' };
+    }
+  };
 
-        // Decode token to get user info
+  const verifyLogin = async (email: string, otp: string): Promise<AuthResponse> => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/users/verify-login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, otp }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        return { success: false, error: data.message || 'Verification failed' };
+      }
+
+      if (data.token) {
+        localStorage.setItem('choce_token', data.token);
         const decoded = decodeToken(data.token);
         if (decoded) {
           const userData: User = {
@@ -124,29 +151,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             lastName: decoded.lastName,
             name: `${decoded.firstName} ${decoded.lastName}`,
             role: decoded.role,
-            phone: '', // Not in token, will be empty
-            address: '', // Not in token, will be empty
+            phone: '',
+            address: '',
           };
           setUser(userData);
           return { success: true };
         }
       }
-
-      return { success: false, error: 'Invalid response from server' };
+      return { success: false, error: 'Invalid response' };
     } catch (error) {
-      console.error('Login error:', error);
-      return { success: false, error: 'Network error. Please check if the backend server is running.' };
+      console.error('Verify Login error:', error);
+      return { success: false, error: 'Network error.' };
     }
   };
 
-  const signup = async (userData: SignupData): Promise<{ success: boolean; error?: string }> => {
+  const signup = async (userData: SignupData): Promise<AuthResponse> => {
     try {
-      // Split name into firstName and lastName
       const nameParts = userData.name.trim().split(/\s+/);
       const firstName = nameParts[0] || '';
       const lastName = nameParts.slice(1).join(' ') || nameParts[0] || '';
 
-      const response = await fetch(`${API_BASE_URL}/users`, {
+      // UPDATED URL: /users/signup
+      const response = await fetch(`${API_BASE_URL}/users/signup`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -166,11 +192,46 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return { success: false, error: data.message || 'Signup failed' };
       }
 
-      // Auto-login after successful signup
-      return await login(userData.email, userData.password);
+      // Backend returns { message: "OTP sent..." }
+      return { success: true, requiresOtp: true };
     } catch (error) {
       console.error('Signup error:', error);
       return { success: false, error: 'Network error. Please check if the backend server is running.' };
+    }
+  };
+
+  const verifySignup = async (userData: SignupData, otp: string): Promise<AuthResponse> => {
+    try {
+      const nameParts = userData.name.trim().split(/\s+/);
+      const firstName = nameParts[0] || '';
+      const lastName = nameParts.slice(1).join(' ') || nameParts[0] || '';
+
+      const response = await fetch(`${API_BASE_URL}/users/verify-signup`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          firstName,
+          lastName,
+          email: userData.email,
+          password: userData.password,
+          otp
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        return { success: false, error: data.message || 'Verification failed' };
+      }
+
+      // After verification/creation, automatically login
+      return await login(userData.email, userData.password);
+
+    } catch (error) {
+      console.error('Verify Signup error:', error);
+      return { success: false, error: 'Network error.' };
     }
   };
 
@@ -178,7 +239,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setUser(null);
     localStorage.removeItem('choce_user_data');
     localStorage.removeItem('choce_token');
-    // Also clear cart on logout
     localStorage.removeItem('choce_cart');
   };
 
@@ -193,7 +253,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         isAuthenticated: !!user,
         isLoading,
         login,
+        verifyLogin,
         signup,
+        verifySignup,
         logout,
         getToken
       }}
